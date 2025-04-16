@@ -27,7 +27,7 @@ export default function LoginPage() {
       if (user.isAdmin) {
         router.push("/admin");
       } else {
-        router.push("/dashboard");
+        router.push("/questionnaires");
       }
     } else {
       setError("Invalid username or password");
