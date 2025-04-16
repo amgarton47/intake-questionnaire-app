@@ -21,7 +21,7 @@ export default function LoginPage() {
         router.push("/questionnaires");
       }
     }
-  }, []);
+  }, [router]);
 
   const handleLogin = async (e) => {
     e.preventDefault();

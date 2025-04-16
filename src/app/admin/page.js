@@ -12,13 +12,13 @@ export default function AdminPage() {
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
-    if (!storedUser) {
+    if (!storedUser || storedUser.role !== "admin") {
       router.push("/login");
       return;
     }
 
     fetchUsers();
-  }, []);
+  }, [router]);
 
   const fetchUsers = async () => {
     const { data: responses, error } = await supabase
