@@ -170,6 +170,7 @@ export default function QuestionnairePage() {
       alert("Something went wrong.");
     } else {
       alert("Responses submitted!");
+      router.push("/questionnaires");
     }
   };
 
