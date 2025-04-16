@@ -1,12 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-
-const users = [
-  { username: "user1", password: "password1", isAdmin: false },
-  { username: "admin1", password: "adminpass1", isAdmin: true },
-];
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -14,17 +10,35 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const router = useRouter();
 
-  const handleLogin = (e) => {
+  // Redirect if already logged in
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      const user = JSON.parse(storedUser);
+      if (user.role === "admin") {
+        router.push("/admin");
+      } else {
+        router.push("/questionnaires");
+      }
+    }
+  }, []);
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-    const user = users.find(
-      (user) => user.username === username && user.password === password
-    );
-    if (user) {
-      // Store user info in local storage or context
-      // localStorage.setItem("user", JSON.stringify(user));
+
+    const { data, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("username", username)
+      .eq("password", password)
+      .single();
+
+    if (data) {
+      // Store user info in local storage
+      localStorage.setItem("user", JSON.stringify(data));
 
       // Redirect user based on role
-      if (user.isAdmin) {
+      if (data.role === "admin") {
         router.push("/admin");
       } else {
         router.push("/questionnaires");
@@ -46,6 +60,7 @@ export default function LoginPage() {
           <input
             type="text"
             value={username}
+            autoComplete="username"
             onChange={(e) => setUsername(e.target.value)}
             className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 mb4" //mb-4
           ></input>
@@ -54,6 +69,7 @@ export default function LoginPage() {
           <input
             type="password"
             value={password}
+            autoComplete="current-password"
             onChange={(e) => setPassword(e.target.value)}
             className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           ></input>
