@@ -76,7 +76,6 @@ export default function QuestionnairePage() {
         .select("question_id, answer_text")
         .eq("user_id", storedUser.id)
         .eq("questionnaire_id", id);
-      // .order("create_date", { ascending: true });
 
       if (responsesError) {
         console.log("Error fetching responses:", responsesError);
@@ -141,6 +140,20 @@ export default function QuestionnairePage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const invalidInputs = questions
+      .filter((q) => q.type === "input")
+      .filter((q) => {
+        const answer = responses[q.id];
+        return !answer || !answer.trim(); // empty or only whitespace
+      });
+
+    if (invalidInputs.length > 0) {
+      alert(
+        "Please fill out all input questions with valid (non-empty) answers."
+      );
+      return;
+    }
+
     const payload = Object.entries(responses).map(([questionId, response]) => ({
       user_id: user.id,
       questionnaire_id: id,
@@ -157,7 +170,6 @@ export default function QuestionnairePage() {
       alert("Something went wrong.");
     } else {
       alert("Responses submitted!");
-      router.push("/thank-you");
     }
   };
 
@@ -180,34 +192,25 @@ export default function QuestionnairePage() {
               {idx + 1}. {question.question}
             </span>
 
-            {question.type === "mcq" && !question.allow_multiple_answers && (
+            {question.type === "mcq" && (
               <div className="space-y-2">
                 {question.options?.map((option, idx) => (
                   <label key={idx} className="flex items-center space-x-2">
                     <input
-                      type="radio"
+                      type={
+                        question.allow_multiple_answers ? "checkbox" : "radio"
+                      }
                       name={`question-${question.id}`}
                       value={option}
-                      checked={responses[question.id] === option}
-                      onChange={() => handleResponseChange(question.id, option)}
-                      className="text-blue-500 focus:ring-2 focus:ring-blue-300"
-                    />
-                    <span>{option}</span>
-                  </label>
-                ))}
-              </div>
-            )}
-
-            {question.type === "mcq" && question.allow_multiple_answers && (
-              <div className="space-y-2">
-                {question.options?.map((option, idx) => (
-                  <label key={idx} className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      value={option}
-                      checked={responses[question.id]?.includes(option)}
+                      checked={
+                        !question.allow_multiple_answers
+                          ? responses[question.id] === option
+                          : (responses[question.id] || []).includes(option)
+                      }
                       onChange={() =>
-                        handleMultipleChoiceChange(question.id, option)
+                        question.allow_multiple_answers
+                          ? handleMultipleChoiceChange(question.id, option)
+                          : handleResponseChange(question.id, option)
                       }
                       className="text-blue-500 focus:ring-2 focus:ring-blue-300"
                     />
